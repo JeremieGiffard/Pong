@@ -1,114 +1,103 @@
-    let canvasDom;
-    let ctx;
-    const ball = {
-        color: "#FF0000",
-        radius:10,
-        x:40,
-        y:40,
-        direction: { //0: pas de déplacement, 1: déplacement vers la droite ou vers le bas, -1: vers la gauche ou vers le haut
-       x: 0, //0, no horizontal movement
-       y: 1 //1, up and down
+'use strict';
+
+const ball = {
+    color: "red",
+    radius:10,
+    x:40,
+    y:40,
+    direction: {
+       x: 0, 
+       y: 1 
     },
-    speed: 6 // speed //vitesse de déplacement
-};
-    
- 
-const canvas = {
-    w: 0,
-    h: 0,
-    animationId: null //stocker l'ID de requestAnimationFrame
+    speed: 6
 };
 
-// paddle
 const paddle = {
-    color: "#FF0000",
-    x:10,
-    y:10,
+    color: "white",
+    x: 0, 
+    y: 0, 
     w: 100,
-    h: 20,
+    h: 20, 
     direction: {
-        x: 0 // no horizontal movement
+        x: 0 
     },
     speed: 10 
 };
 
+const game = {
+    w: 0, 
+    h: 0,
+    animationId: null //stocker l'ID de requestAnimationFrame
+};
 
-function showBall() {
-    window.requestAnimationFrame(showBall);
-    
-    ctx.clearRect(0, 0, canvas.w, canvas.h); //effacer les dessins
-    ctx.beginPath(); //start drawing début du tracé
-    ctx.fillStyle = ball.color;//définition de la couleur
-    ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI); // circle //dessin un cercle
-    ctx.fill();//appliquer la couleur
-    ball.x += ball.direction.x;
-    ball.y += ball.direction.y;
-    
- 
-     //  Collision du paddle dans les conditions If de collision du canvas
-     if (
-         ball.y - ball.radius <= 0 || ball.y + ball.radius >= canvas.h //border of the screen   on rebondie sur le haut de la fenetre
-         || (ball.y + ball.radius >= paddle.y && ball.x >= paddle.x && ball.x <= paddle.x + paddle.w ) // on rebondie sur le paddle
-         )  {
+let canvasDom;
+let ctx;
+
+function detectCollision() {
+    if (
+        ball.y + ball.radius >= paddle.y && ball.x >= paddle.x && ball.x <= paddle.x + paddle.w ) {
         
-        ball.direction.y *= -1;
-        
-     };
-     
-      if (ball.x - ball.radius <= 0 || ball.x + ball.radius >= canvas.w) {
-         
-         ball.direction.x *= -1;
-     };
-    
-     // collision briques
-     
-     //game over
-     
-     if (ball.y + ball.radius >= canvas.h) {
-            window.cancelAnimationFrame(canvas.animationId);
-            canvas.animationId = null;
-            alert("GAME OVER");
+        //1er tier
+        if (ball.x + ball.radius <= paddle.x + (paddle.w /3)) {
+            ball.direction.x = -1;
         }
-        
-        
+        else if (ball.x + ball.radius <= paddle.x + (paddle.w * 2/3)) {//2nd tier
+            ball.direction.x = 0;
+        }
+        else {//3ieme tier
+            ball.direction.x = 1;
+        }
+        ball.direction.y *= -1;
+}
+
+function showGame() {
+    window.requestAnimationFrame(showGame);
+    detectCollision();
     
-    ball.y += ball.speed * ball.direction.y;
+    ctx. clearRect(0, 0, game.w, game.h);
     
-    ctx.beginPath(); //début du tracé
-    ctx.fillStyle = ball.color; //définition de la couleur
-    ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);  //dessin de la ball
-    ctx.fill();//appliquer la couleur
-    
-    // deplacement paddle avec keydown
-    paddle.x += paddle.direction.x * paddle.speed;
-    
-    //test si on atteind le coté droit
-    if (paddle.x + paddle.w + paddle.speed > ball.w) {
-          //mettre le paddle sur le coté gauche
-          paddle.x = ball.w - paddle.w;
+    if (ball.y + ball.radius >= game.h || ball.y - ball.radius <= 0) {
+        ball.direction.y *= -1;
     }
     
-    //test si on atteind le coté gauche
+    //touch border
+    if (ball.x + ball.radius >= game.w || ball.x - ball.radius <= 0) {
+        ball.direction.x *= -1;
+    }
+    ball.y += ball.speed * ball.direction.y;
+    ball.x += ball.speed * ball.direction.x;
+    
+    //start drawing
+    ctx.beginPath();
+    ctx.fillStyle = ball.color;
+    ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    paddle.x += paddle.direction.x * paddle.speed;
+    //if touch border
+    if (paddle.x + paddle.w + paddle.speed > game.w) {
+          //go left
+          paddle.x = game.w - paddle.w;
+    }
+    //if touch border
     if (paddle.x - paddle.speed < 0) {
         paddle.x = 0;
     }
     
+    //color
     ctx.fillStyle = paddle.color;
-    ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
-
+    //dessiner le paddle
+    ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h); 
 }
-
-// function bouger paddle fluide
 
 function keyboardEvent(e) {
     switch (e.key) {
             case 'ArrowRight':
-                
-                if (e.type == 'keydown') { //la touche est bien enfoncée
-                   paddle.direction.x = 1; //la direction va vers la droite
+                if (e.type == 'keydown') { 
+                   paddle.direction.x = 1; //go right          
                 }
                 else {
-                   paddle.direction.x = 0;   //la touche est relevé, on stop la direction du paddle
+                   paddle.direction.x = 0;
                 }
                 break;
             case 'ArrowLeft':
@@ -123,37 +112,31 @@ function keyboardEvent(e) {
 }
 
 
-
-/*
-*************
-Code Principal
-*************
-
-*/
-
+// Dès que le DOM est chargé on commence
 document.addEventListener('DOMContentLoaded', function () {
+    
     canvasDom = document.getElementById('canvas');
     ctx = canvasDom.getContext('2d');
-    
+
     canvasDom.width = window.innerWidth;
     canvasDom.height = window.innerHeight;
+    
+    //get canvas width/height
+    game.w = canvasDom.width;
+    game.h = canvasDom.height;
+    
+    //center ball
+    ball.x = game.w /2;    
+    ball.y = game.h /2;
+    
+    //center paddle
+    paddle.x = (game.w /2) - (paddle.w /2);
+    paddle.y = game.h - 80 - paddle.h;
+    
+    //affichage du jeu
+    window.requestAnimationFrame(showGame);
 
-    canvas.w = canvasDom.width;
-    canvas.h = canvasDom.height;
-    
-    //center la ball dans le canvas
-    ball.x = canvas.w /2;
-    ball.y = canvas.h /2;
-    
-    paddle.x = (canvas.w /2) - (paddle.w /2);
-    paddle.y = canvas.h -80 - paddle.h;
-    
-    window.requestAnimationFrame(showBall);
-    
     document.addEventListener('keydown', keyboardEvent); 
     document.addEventListener('keyup', keyboardEvent);
     
-
-   
 });
-    
