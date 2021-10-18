@@ -14,7 +14,7 @@ const ball = {
 
 
 const paddle = {
-    color: "white",
+    color: "red",
     x: 0, 
     y: 0, 
     w: 100, 
