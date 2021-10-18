@@ -1,5 +1,9 @@
 canvas {
-    background: linear-gradient(black, #000099, #66c2ff, #ffcccc, #ffeee6);
+    background: linear-gradient(
+      35deg,
+      #ccffff,
+      #ffcccc
+    );
 }
 
 body {
