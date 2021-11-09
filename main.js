@@ -1,7 +1,7 @@
 'use strict';
 
 const ball = {
-    color: "red",
+    color: "white",
     radius:10,
     x:40,
     y:40,
@@ -14,7 +14,7 @@ const ball = {
 
 
 const paddle = {
-    color: "red",
+    color: "white",
     x: 0, 
     y: 0, 
     w: 100, 
